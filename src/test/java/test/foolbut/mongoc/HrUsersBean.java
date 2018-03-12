@@ -1,4 +1,4 @@
-package test.zhongan.mongaz;
+package test.foolbut.mongoc;
 
 import self.foolbut.mongoc.annotation.Collection;
 

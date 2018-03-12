@@ -1,4 +1,4 @@
-package test.zhongan.mongaz;
+package test.foolbut.mongoc;
 
 import java.util.Arrays;
 import java.util.Date;
