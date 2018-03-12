@@ -25,7 +25,6 @@ import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.codecs.pojo.annotations.BsonId;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBObjectCodecProvider;
@@ -44,11 +43,10 @@ import self.foolbut.mongoc.annotation.Collection;
 import self.foolbut.mongoc.codec.WithIdStrCodecProvider;
 import self.foolbut.mongoc.ex.CollectionNameNotFoundException;
 
-public class MongoRepositoryFactory implements IMongoRepository,InitializingBean{
+class MongoRepository implements IMongoRepository{
 
     private static final ConcurrentHashMap<Class<?>,PojoMeta> metaMap = new ConcurrentHashMap<Class<?>,PojoMeta>();
-    private MongoClient client;
-    private String dbName;
+
     private MongoDatabase _database;
     private CodecRegistry _withIdCodec = CodecRegistries.fromProviders(new WithIdStrCodecProvider(),new ValueCodecProvider(),
             new BsonValueCodecProvider(),
@@ -61,20 +59,7 @@ public class MongoRepositoryFactory implements IMongoRepository,InitializingBean
             new GridFSFileCodecProvider(),
             PojoCodecProvider.builder().automatic(true).build());
 
-    public MongoClient getClient() {
-        return client;
-    }
-    public void setClient(MongoClient client) {
-        this.client = client;
-    }
-    public String getDbName() {
-        return dbName;
-    }
-    public void setDbName(String dbName) {
-        this.dbName = dbName;
-    }
-    @Override
-    public void afterPropertiesSet() throws Exception {
+    public MongoRepository(MongoClient client, String dbName){
         Assert.notNull(client);
         Assert.notNull(dbName);
         List<MongoCredential> credentialList = client.getCredentialsList();
@@ -90,7 +75,7 @@ public class MongoRepositoryFactory implements IMongoRepository,InitializingBean
         if(!dbAuthed){
             throw new RuntimeException("db <"+dbName+"> not authenticated.");
         }
-        
+
         this._database = client.getDatabase(dbName);
     }
 
@@ -119,6 +104,7 @@ public class MongoRepositoryFactory implements IMongoRepository,InitializingBean
         }
         return finalList;
     }
+
     @Override
     public <T> List<T> findAll(Map<String, Object> params, Class<T> claz) {
         List<T> finalList = new ArrayList<T>();
@@ -170,6 +156,7 @@ public class MongoRepositoryFactory implements IMongoRepository,InitializingBean
         Bson update = MongoUtils.buildUpdate(deleteMap);
         this._database.getCollection(collectionName).updateOne(Filters.eq(new ObjectId(objectId)), update);
     }
+
     private String getCollectionName(Class<?> claz){
         if(!metaMap.containsKey(claz)){
             this.parsePojoMeta(claz);
@@ -183,6 +170,7 @@ public class MongoRepositoryFactory implements IMongoRepository,InitializingBean
         }
         return metaMap.get(claz).getIdField();
     }
+
     private void parseObjectId(ObjectId objId, Object obj){
         Class<?> claz = obj.getClass();
         Field idField = this.getIdField(claz);
@@ -205,6 +193,7 @@ public class MongoRepositoryFactory implements IMongoRepository,InitializingBean
             }
         }
     }
+
     private void parsePojoMeta(Class<?> claz){
         // parse collectionName
         Collection c = claz.getAnnotation(Collection.class);

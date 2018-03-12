@@ -12,7 +12,7 @@ import org.bson.codecs.pojo.PojoCodecProvider;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
-import self.foolbut.mongoc.MongoRepositoryFactory;
+import self.foolbut.mongoc.MongoRepository;
 import self.foolbut.mongoc.codec.ObjectIdStrCodec;
 
 public class MainTest {
@@ -52,7 +52,7 @@ public class MainTest {
 //        System.out.println(doc.get("_id"));
 //        System.out.println(doc.get("exeTime"));
         
-        MongoRepositoryFactory mongoRepo = new MongoRepositoryFactory();
+        MongoRepository mongoRepo = new MongoRepository();
         mongoRepo.setClient(client);
         mongoRepo.setDbName("prism_alimini");
         mongoRepo.afterPropertiesSet();

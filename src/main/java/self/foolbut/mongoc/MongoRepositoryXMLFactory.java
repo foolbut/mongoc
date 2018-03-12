@@ -74,11 +74,7 @@ public class MongoRepositoryXMLFactory implements FactoryBean<IMongoRepository>,
 
         MongoCredential c = MongoCredential.createCredential(userName, dbName, password.toCharArray());
         MongoClient _client = new MongoClient(new ServerAddress(host,port),Arrays.asList(new MongoCredential[]{c}));
-        MongoRepositoryFactory repo = new MongoRepositoryFactory();
-        repo.setClient(_client);
-        repo.setDbName(dbName);
-        repo.afterPropertiesSet();
-        _repo = repo;
+        _repo = new MongoRepository(_client,dbName);
     }
     
     private boolean isBlank(final CharSequence cs) {
