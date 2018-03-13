@@ -10,10 +10,13 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
+
+import static java.net.HttpURLConnection.HTTP_OK;
 
 public class MongoRepositoryAppFactory implements FactoryBean<IMongoRepository>,InitializingBean {
     private String groupName;
@@ -28,26 +31,27 @@ public class MongoRepositoryAppFactory implements FactoryBean<IMongoRepository>,
         this.configURL = configUrl;
     }
 
-    private void setGroupName(String _groupName){
+    public void setGroupName(String _groupName){
         this.groupName = _groupName;
     }
-    private void setAppName(String _appName){
+    public void setAppName(String _appName){
         this.appName = appName;
     }
-    private void setAccessKey(String _accessKey) {
+    public void setAccessKey(String _accessKey) {
         accessKey = _accessKey;
     }
 
-    private void setPublicKey(String _publicKey) {
+    public void setPublicKey(String _publicKey) {
         publicKey = _publicKey;
     }
 
-    private void setConfigURL(String _configURL) {
+    public void setConfigURL(String _configURL) {
         configURL = _configURL;
     }
 
     @Override
     public IMongoRepository getObject() throws Exception {
+        if (null ==_repo) throw new NullPointerException("MongoRepository not generated");
         return _repo;
     }
 
@@ -74,8 +78,15 @@ public class MongoRepositoryAppFactory implements FactoryBean<IMongoRepository>,
             URL url = new URL(configURL+"/config/"+groupName+"/"+appName+"/connect?_access="+accessKey);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
+            con.setConnectTimeout(3);
+            con.setReadTimeout(3);
             // connect server for db-connection info
             con.connect();
+            int statusCode = con.getResponseCode();
+            if(HTTP_OK  != statusCode){
+                throw new IOException("config server responses error, status:"+ statusCode);
+            }
+
             br = new BufferedReader(new InputStreamReader(con.getInputStream(), "UTF-8"));
 
 
@@ -90,15 +101,15 @@ public class MongoRepositoryAppFactory implements FactoryBean<IMongoRepository>,
         }
 
 
-        String decrpted = _decyrpt(respBuilder.toString());
-        BsonDocument bson = BsonDocument.parse(decrpted);
+        String decrypted = _decrypt(respBuilder.toString());
+        BsonDocument bson = BsonDocument.parse(decrypted);
         _configRepo(bson);
 
     }
 
 
-    private String _decyrpt(String resp){
-        return null;
+    private String _decrypt(String resp){
+        return resp;
     }
 
     private void _configRepo(BsonDocument bson){
